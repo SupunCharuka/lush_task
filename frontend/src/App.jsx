@@ -17,12 +17,12 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex">
+      <div className="app-root">
         <Header onDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
         <Sidebar mobileOpen={mobileOpen} onDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
 
-        <main className={`flex-1 p-4 md:ml-[${drawerWidth}px]`}>
-          <div className="h-16" />
+        <main className={`app-main p-4 md:ml-[${drawerWidth}px]`}>
+        
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/marketing" element={<Marketing />} />

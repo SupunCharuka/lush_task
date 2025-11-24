@@ -1,27 +1,27 @@
 import React from 'react'
-import AppBar from '@mui/material/AppBar'
-import Toolbar from '@mui/material/Toolbar'
-import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
-import MenuIcon from '@mui/icons-material/Menu'
 
 export default function Header({ onDrawerToggle }) {
   return (
-    <AppBar position="fixed" color="inherit" elevation={1}>
-      <Toolbar>
-        <IconButton
-          color="inherit"
-          edge="start"
+    <header className="app-header">
+      <div className="app-header-inner">
+        <button
           onClick={onDrawerToggle}
-          sx={{ mr: 2, display: { md: 'none' } }}
           aria-label="open drawer"
+          className="menu-button"
         >
-          <MenuIcon />
-        </IconButton>
-        <Typography variant="h6" component="div" sx={{fontWeight: 600}}>
-          Internal Management — Marketing & Finance
-        </Typography>
-      </Toolbar>
-    </AppBar>
+          ☰
+        </button>
+
+        <div className="brand">Internal Management</div>
+
+        <div className="header-spacer" />
+
+        <div className="header-controls">
+        
+
+          <button className="avatar" aria-label="User menu">SC</button>
+        </div>
+      </div>
+    </header>
   )
 }

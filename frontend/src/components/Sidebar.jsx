@@ -1,11 +1,4 @@
 import React from 'react'
-import Drawer from '@mui/material/Drawer'
-import List from '@mui/material/List'
-import ListItem from '@mui/material/ListItem'
-import ListItemButton from '@mui/material/ListItemButton'
-import ListItemText from '@mui/material/ListItemText'
-import Divider from '@mui/material/Divider'
-import Box from '@mui/material/Box'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 
 const items = [
@@ -20,50 +13,50 @@ const items = [
 export default function Sidebar({ mobileOpen, onDrawerToggle, drawerWidth = 240 }){
   const location = useLocation()
 
-  const drawerContent = (
-    <Box sx={{ width: drawerWidth }} role="presentation">
-      <List sx={{mt: 1}}>
-        <ListItem>
-          <strong>Menu</strong>
-        </ListItem>
-        <Divider />
-        {items.map(i => (
-          <ListItem key={i.to} disablePadding>
-            <ListItemButton
-              component={RouterLink}
+  const content = (
+    <div className="sidebar-content" role="presentation">
+      <div className="sidebar-top">
+        <div className="sidebar-brand">LUSH</div>
+      </div>
+
+      <nav className="sidebar-nav" aria-label="main navigation">
+        {items.map(i => {
+          const selected = location.pathname === i.to
+          return (
+            <RouterLink
+              key={i.to}
               to={i.to}
-              selected={location.pathname === i.to}
               onClick={onDrawerToggle}
+              className={`sidebar-item ${selected ? 'active' : ''}`}
             >
-              <ListItemText primary={i.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Box>
+              {i.label}
+            </RouterLink>
+          )
+        })}
+      </nav>
+    </div>
   )
 
   return (
-    <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }} aria-label="mailbox folders">
-      {/* Temporary drawer for mobile */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={onDrawerToggle}
-        ModalProps={{ keepMounted: true }} // Better open performance on mobile.
-        sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth } }}
-      >
-        {drawerContent}
-      </Drawer>
+    <>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="mobile-overlay" onClick={onDrawerToggle} aria-hidden />
+      )}
 
-      {/* Permanent drawer for desktop */}
-      <Drawer
-        variant="permanent"
-        sx={{ display: { xs: 'none', md: 'block' }, '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth } }}
-        open
-      >
-        {drawerContent}
-      </Drawer>
-    </Box>
+      {/* Mobile drawer */}
+      <nav className={`mobile-drawer ${mobileOpen ? 'open' : ''}`} aria-label="mobile menu">
+        <div className="mobile-drawer-header">
+          <div className="sidebar-brand">LUSH</div>
+          <button onClick={onDrawerToggle} aria-label="close drawer" className="close-button">✕</button>
+        </div>
+        {content}
+      </nav>
+
+      {/* Desktop persistent sidebar */}
+      <nav className="sidebar-desktop" aria-label="main menu" style={{width: drawerWidth}}>
+        {content}
+      </nav>
+    </>
   )
 }
