@@ -55,3 +55,21 @@ export function getSummary(){
     recentInvoices: invoices.map(inv=>[inv.id, inv.customer, `$${inv.amount}`, inv.status])
   })
 }
+
+export function getMonthlyStats(){
+  // mock monthly profit/loss for last 6 months
+  return Promise.resolve({
+    labels: ['Jun','Jul','Aug','Sep','Oct','Nov'],
+    data: [3000, 2500, 3200, 2800, 4000, 3600]
+  })
+}
+
+export function getExpenseBreakdown(){
+  // mock expense breakdown
+  return Promise.resolve([
+    {category: 'Salaries', amount: 8000},
+    {category: 'Software', amount: 200},
+    {category: 'Marketing', amount: 1500},
+    {category: 'Utilities', amount: 300}
+  ])
+}
