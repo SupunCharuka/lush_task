@@ -1,75 +1,37 @@
-// Lightweight mock API for Marketing & Finance features.
-// Replace with real backend calls as needed.
 
-const campaigns = [
-  {name: 'Q4 Promo', platform: 'Facebook', duration: '2025-10 to 2025-11', budget: 1200, ROI: '120%'},
-  {name: 'Search Ads', platform: 'Google', duration: '2025-09 to 2025-11', budget: 3000, ROI: '80%'}
-]
+import axios from 'axios'
 
-const leadsByPlatform = [
-  {platform: 'Facebook', leads: 120},
-  {platform: 'Google', leads: 80},
-  {platform: 'Email', leads: 26}
-]
+const API_BASE = 'http://localhost:5000/api'
 
-const income = [
-  {date: '2025-11-01', source: 'Project A', amount: 5000, notes: 'Milestone 1'},
-  {date: '2025-11-10', source: 'Customer Deposit', amount: 1000, notes: 'Deposit for Project B'}
-]
-
-const expenses = [
-  {date: '2025-11-05', category: 'Salaries', amount: 8000, description: 'Monthly payroll'},
-  {date: '2025-11-08', category: 'Software', amount: 200, description: 'SaaS subscriptions'}
-]
-
-const invoices = [
-  {id: 'INV-1001', customer: 'Acme Co.', amount: 2500, due: '2025-11-15', status: 'Pending'},
-  {id: 'INV-1000', customer: 'Beta LLC', amount: 4200, due: '2025-10-30', status: 'Paid'}
-]
-
-export function getCampaigns(){
-  return Promise.resolve(campaigns)
+export async function getCampaigns(){
+	const res = await axios.get(`${API_BASE}/campaigns`)
+	return res.data
 }
 
-export function getLeadsByPlatform(){
-  return Promise.resolve(leadsByPlatform)
+export async function createCampaign(payload){
+	const res = await axios.post(`${API_BASE}/campaigns`, payload)
+	return res.data
 }
 
-export function getIncome(){
-  return Promise.resolve(income)
+export async function updateCampaign(id, payload){
+	const res = await axios.put(`${API_BASE}/campaigns/${id}`, payload)
+	return res.data
 }
 
-export function getExpenses(){
-  return Promise.resolve(expenses)
+export async function deleteCampaign(id){
+	const res = await axios.delete(`${API_BASE}/campaigns/${id}`)
+	return res.data
 }
 
-export function getInvoices(){
-  return Promise.resolve(invoices)
+export async function getLeadsByPlatform(){
+	const res = await axios.get(`${API_BASE}/leads-by-platform`)
+	return res.data
 }
 
-export function getSummary(){
-  // simple aggregated mock
-  return Promise.resolve({
-    totalRevenue: income.reduce((s,i)=>s+i.amount,0),
-    monthlyProfit: 12000 - expenses.reduce((s,e)=>s+e.amount,0),
-    recentInvoices: invoices.map(inv=>[inv.id, inv.customer, `$${inv.amount}`, inv.status])
-  })
+export async function getMonthlyCampaigns(){
+	const res = await axios.get(`${API_BASE}/monthly-campaigns`)
+	return res.data
 }
 
-export function getMonthlyStats(){
-  // mock monthly profit/loss for last 6 months
-  return Promise.resolve({
-    labels: ['Jun','Jul','Aug','Sep','Oct','Nov'],
-    data: [3000, 2500, 3200, 2800, 4000, 3600]
-  })
-}
+export default API_BASE
 
-export function getExpenseBreakdown(){
-  // mock expense breakdown
-  return Promise.resolve([
-    {category: 'Salaries', amount: 8000},
-    {category: 'Software', amount: 200},
-    {category: 'Marketing', amount: 1500},
-    {category: 'Utilities', amount: 300}
-  ])
-}
