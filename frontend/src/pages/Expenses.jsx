@@ -1,9 +1,12 @@
-import React, {useEffect, useState} from 'react'
-import {getExpenses} from '../api/finance'
+import React, {useState} from 'react'
 
 export default function Expenses(){
-  const [items, setItems] = useState([])
-  useEffect(()=>{ getExpenses().then(setItems) },[])
+  // Static dummy expense data for development
+  const [items] = useState([
+    { date: '2025-11-01', category: 'Ad Spend', amount: 1200, description: 'Facebook campaign' },
+    { date: '2025-11-05', category: 'Salaries', amount: 3000, description: 'Payroll' },
+    { date: '2025-11-10', category: 'Tools', amount: 200, description: 'Analytics subscription' }
+  ])
 
   return (
     <div className="max-w-7xl mx-auto p-4">

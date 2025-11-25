@@ -1,9 +1,11 @@
-import React, {useEffect, useState} from 'react'
-import {getIncome} from '../api/finance'
+import React, {useState} from 'react'
 
 export default function Income(){
-  const [items, setItems] = useState([])
-  useEffect(()=>{ getIncome().then(setItems) },[])
+  // Static dummy income records for development
+  const [items] = useState([
+    { date: '2025-11-03', source: 'Acme Corp', amount: 1200, notes: 'Website redesign' },
+    { date: '2025-10-28', source: 'Beta LLC', amount: 950, notes: 'Monthly retainer' }
+  ])
 
   return (
     <div className="max-w-7xl mx-auto p-4">

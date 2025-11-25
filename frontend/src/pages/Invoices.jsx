@@ -1,9 +1,11 @@
-import React, {useEffect, useState} from 'react'
-import {getInvoices} from '../api/finance'
+import React, {useState} from 'react'
 
 export default function Invoices(){
-  const [items, setItems] = useState([])
-  useEffect(()=>{ getInvoices().then(setItems) },[])
+  // Static dummy invoices for development
+  const [items] = useState([
+    { id: 'INV-1001', customer: 'Acme Corp', amount: 1200, due: '2025-12-01', status: 'Paid' },
+    { id: 'INV-1002', customer: 'Beta LLC', amount: 950, due: '2025-12-15', status: 'Pending' }
+  ])
 
   return (
     <div className="max-w-7xl mx-auto p-4">

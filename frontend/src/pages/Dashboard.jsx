@@ -1,22 +1,24 @@
-import React, {useEffect, useState} from 'react'
-import {getSummary, getMonthlyStats, getExpenseBreakdown} from '../api/finance'
+import React, {useState} from 'react'
 import BarChart from '../components/charts/BarChart'
 import PieChart from '../components/charts/PieChart'
 
 export default function Dashboard(){
-  const [summary, setSummary] = useState(null)
+  // Static dummy data (no backend calls)
+  const [summary] = useState({
+    totalRevenue: '12,345',
+    monthlyProfit: '1,234',
+    recentInvoices: [
+      ['INV-1001', 'Acme Corp', '$1,200', 'Paid'],
+      ['INV-1002', 'Beta LLC', '$950', 'Pending']
+    ]
+  })
 
-  useEffect(()=>{
-    getSummary().then(setSummary)
-  },[])
-
-  const [monthly, setMonthly] = useState({labels: [], data: []})
-  const [expenseBreakdown, setExpenseBreakdown] = useState([])
-
-  useEffect(()=>{
-    getMonthlyStats().then(setMonthly)
-    getExpenseBreakdown().then(setExpenseBreakdown)
-  },[])
+  const [monthly] = useState({ labels: ['2025-09', '2025-10', '2025-11'], data: [1000, 1200, 900] })
+  const [expenseBreakdown] = useState([
+    { category: 'Ad Spend', amount: 5000 },
+    { category: 'Salaries', amount: 3000 },
+    { category: 'Tools', amount: 800 }
+  ])
 
   return (
     <div className="max-w-7xl mx-auto p-4">
