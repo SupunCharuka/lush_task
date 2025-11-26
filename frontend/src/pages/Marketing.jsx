@@ -3,6 +3,8 @@ import { getCampaigns, getLeadsByPlatform, getMonthlyCampaigns, createCampaign, 
 import PieChart from '../components/charts/PieChart'
 import BarChart from '../components/charts/BarChart'
 import LineChart from '../components/charts/LineChart'
+import StyledInput from '../components/inputs/StyledInput'
+import StyledSelect from '../components/inputs/StyledSelect'
 
 
 export default function Marketing() {
@@ -209,39 +211,85 @@ export default function Marketing() {
             <div className="mb-4 flex items-center justify-between">
               <h3 className="mb-0 text-lg font-medium ">Campaigns</h3>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                <input
-                  placeholder="Search campaigns"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="p-2 border rounded w-full sm:w-64"
-                  aria-label="Search campaigns"
-                />
-                <select
-                  className="p-2 border rounded w-full sm:w-48"
-                  value={platformFilter}
-                  onChange={e => setPlatformFilter(e.target.value)}
-                  aria-label="Filter by platform"
-                >
-                  <option value="">All Platforms</option>
-                  {[...new Set(campaigns.map(c => c.platform).filter(Boolean))].map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
+                <div className="w-full sm:w-64">
+                  <StyledInput
+                    label="Search"
+                    placeholder="Search campaigns"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    aria-label="Search campaigns"
+                  />
+                </div>
+                <div className="w-full sm:w-48">
+                  <StyledSelect
+                    label="Platform"
+                    options={[...new Set(campaigns.map(c => c.platform).filter(Boolean))]}
+                    value={platformFilter}
+                    onChange={e => setPlatformFilter(e.target.value)}
+                    aria-label="Filter by platform"
+                  />
+                </div>
               </div>
             </div>
 
 
             {showForm && (
               <form onSubmit={submitForm} className="bg-gray-50 border p-3 mb-4 rounded">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Name" className="p-2 border rounded" />
-                  <input value={form.platform} onChange={e => setForm({ ...form, platform: e.target.value })} placeholder="Platform" className="p-2 border rounded" />
-                  <input type="date" value={form.start} onChange={e => setForm({ ...form, start: e.target.value })} className="p-2 border rounded" />
-                  <input type="date" value={form.end} onChange={e => setForm({ ...form, end: e.target.value })} className="p-2 border rounded" />
-                  <input type="number" value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })} placeholder="Budget" className="p-2 border rounded" />
-                  <input type="number" value={form.leads} onChange={e => setForm({ ...form, leads: e.target.value })} placeholder="Leads" className="p-2 border rounded" />
-                  <input type="number" value={form.conversions} onChange={e => setForm({ ...form, conversions: e.target.value })} placeholder="Conversions" className="p-2 border rounded" />
-                  <input type="number" value={form.revenue} onChange={e => setForm({ ...form, revenue: e.target.value })} placeholder="Revenue" className="p-2 border rounded" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <StyledInput
+                    label="Name"
+                    value={form.name}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
+                    placeholder="Campaign name"
+                  />
+                  <StyledInput
+                    label="Platform"
+                    value={form.platform}
+                    onChange={e => setForm({ ...form, platform: e.target.value })}
+                    placeholder="Facebook, Google, etc."
+                  />
+                  <StyledInput
+                    label="Start"
+                    type="date"
+                    value={form.start}
+                    onChange={e => setForm({ ...form, start: e.target.value })}
+                  />
+                  <StyledInput
+                    label="End"
+                    type="date"
+                    value={form.end}
+                    onChange={e => setForm({ ...form, end: e.target.value })}
+                  />
+                  <StyledInput
+                    label="Budget"
+                    type="number"
+                    value={form.budget}
+                    onChange={e => setForm({ ...form, budget: e.target.value })}
+                    placeholder="0"
+                  />
+                  <StyledInput
+                    label="Leads"
+                    type="number"
+                    value={form.leads}
+                    onChange={e => setForm({ ...form, leads: e.target.value })}
+                    placeholder="0"
+                  />
+                  <StyledInput
+                    label="Conversions"
+                    type="number"
+                    value={form.conversions}
+                    onChange={e => setForm({ ...form, conversions: e.target.value })}
+                    placeholder="0"
+                  />
+                  <StyledInput
+                    label="Revenue"
+                    type="number"
+                    value={form.revenue}
+                    onChange={e => setForm({ ...form, revenue: e.target.value })}
+                    placeholder="0"
+                  />
                 </div>
-                <div className="mt-2">
+                <div className="mt-3 flex items-center gap-2">
                   <button type="submit" disabled={loading} className="bg-green-600 text-white px-3 py-1 rounded mr-2">{editing ? 'Save' : 'Create'}</button>
                   <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1 rounded border">Cancel</button>
                 </div>
