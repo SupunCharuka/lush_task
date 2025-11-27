@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { getInvoices, createInvoice, sendInvoice, updateInvoice, deleteInvoice } from '../api/invoice'
+import { downloadInvoicePDF } from '../api/invoice'
 
 function formatCurrency(v) {
   return `$${Number(v || 0).toFixed(2)}`
@@ -74,8 +75,25 @@ export default function Invoices() {
     }
   }
 
+  async function handleDownloadPdf(id, invoiceNumber) {
+    try {
+      const blob = await downloadInvoicePDF(id);
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${invoiceNumber || 'invoice'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to download PDF');
+    }
+  }
+
   function openEdit(invoice) {
-    
+
     const prepared = {
       invoiceNumber: invoice.invoiceNumber || '',
       customerName: invoice.customerName || '',
@@ -174,17 +192,19 @@ export default function Invoices() {
           </div>
 
           <div className="mt-3">
-           
+
             <div className="text-xs text-gray-600 mt-1">
-              {(() => { const b = computeBreakdown(); return (
-                <div>
-                  <div>Subtotal: {formatCurrency(b.subtotal)}</div>
-                  <div>Tax ({form.taxPercent}%): {formatCurrency(b.taxAmount)}</div>
-                  <div>Discount: {formatCurrency(b.discount)}</div>
-                </div>
-              ) })()}
+              {(() => {
+                const b = computeBreakdown(); return (
+                  <div>
+                    <div>Subtotal: {formatCurrency(b.subtotal)}</div>
+                    <div>Tax ({form.taxPercent}%): {formatCurrency(b.taxAmount)}</div>
+                    <div>Discount: {formatCurrency(b.discount)}</div>
+                  </div>
+                )
+              })()}
             </div>
-             <div className="text-sm text-gray-700 mt-2">Total: <strong>{formatCurrency(computeTotal())}</strong></div>
+            <div className="text-sm text-gray-700 mt-2">Total: <strong>{formatCurrency(computeTotal())}</strong></div>
             <div className="flex gap-2 mt-3">
               <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setForm({ invoiceNumber: '', customerName: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 }) }} className="px-3 py-1 border rounded">Cancel</button>
               <button type="submit" className="px-3 py-1 bg-green-600 text-white rounded">Create</button>
@@ -220,6 +240,7 @@ export default function Invoices() {
                       <button onClick={() => openEdit(item)} className="px-2 py-1 bg-yellow-400 text-black rounded text-xs">Edit</button>
                       <button onClick={() => handleMarkPaid(item._id)} className="px-2 py-1 bg-gray-200 rounded text-xs">Mark Paid</button>
                       <button onClick={() => handleDelete(item._id)} className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">Delete</button>
+                      <button onClick={() => handleDownloadPdf(item._id, item.invoiceNumber)} className="px-2 py-1 bg-blue-600 text-white rounded text-xs">Download PDF</button>
                     </div>
                   </td>
                 </tr>

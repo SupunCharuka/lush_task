@@ -27,4 +27,9 @@ export async function sendInvoice(id, payload){
   return res.data
 }
 
+export async function downloadInvoicePDF(id) {
+  const res = await axios.get(`${API_BASE}/invoices/${id}/pdf`, { responseType: 'blob' });
+  return res.data; // blob
+}
+
 export default API_BASE
