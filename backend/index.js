@@ -5,6 +5,7 @@ import cors from 'cors';
 import campaignsRouter from './routes/campaigns.js'
 import incomesRouter from './routes/incomes.js'
 import expensesRouter from './routes/expenses.js'
+import invoicesRouter from './routes/invoices.js'
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(
 app.use('/api', campaignsRouter)
 app.use('/api', incomesRouter)
 app.use('/api', expensesRouter)
+app.use('/api', invoicesRouter)
 
 
 
