@@ -19,6 +19,10 @@ export default function Invoices() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ invoiceNumber: '', customerName: '', customerEmail: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 })
   const [editingId, setEditingId] = useState(null)
+  const [errors, setErrors] = useState([])
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [notification, setNotification] = useState(null) // { type: 'success'|'error', message, meta }
+  const [sendingId, setSendingId] = useState(null)
 
   async function load() {
     setLoading(true)
@@ -63,8 +67,10 @@ export default function Invoices() {
 
   async function handleCreate(e) {
     e?.preventDefault()
-    if (form.customerEmail && !isValidEmail(form.customerEmail)) {
-      alert('Please enter a valid customer email address or leave it blank.')
+    const { errors: allErrors, fieldErrors: fe } = validateForm(form)
+    if (allErrors.length) {
+      setErrors(allErrors)
+      setFieldErrors(fe)
       return
     }
 
@@ -80,11 +86,60 @@ export default function Invoices() {
       setShowForm(false)
       setForm({ invoiceNumber: '', customerName: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 })
       setEditingId(null)
+      setErrors([])
+      setFieldErrors({})
       await load()
     } catch (err) {
       console.error(err)
       alert('Failed to create invoice')
     }
+  }
+
+  function validateForm(f) {
+    const errs = []
+    const fe = {}
+
+    if (!f.customerName || !f.customerName.toString().trim()) {
+      errs.push('Customer name is required.')
+      fe.customerName = 'required'
+    }
+
+    if (!f.customerEmail || !isValidEmail(f.customerEmail)) {
+      errs.push('Customer email is required and must be a valid email address.')
+      fe.customerEmail = 'required'
+    }
+
+    if (f.taxPercent != null && Number(f.taxPercent) < 0) {
+      errs.push('Tax percent cannot be negative.')
+      fe.taxPercent = 'invalid'
+    }
+
+    if (f.discount != null && Number(f.discount) < 0) {
+      errs.push('Discount cannot be negative.')
+      fe.discount = 'invalid'
+    }
+
+    if (!f.items || !f.items.length) {
+      errs.push('At least one item is required.')
+      fe.items = 'required'
+    } else {
+      f.items.forEach((it, idx) => {
+        if (!it.description || !it.description.toString().trim()) {
+          errs.push(`Item ${idx + 1}: description is required.`)
+          fe[`items.${idx}.description`] = 'required'
+        }
+        if (Number(it.quantity) <= 0 || isNaN(Number(it.quantity))) {
+          errs.push(`Item ${idx + 1}: quantity must be at least 1.`)
+          fe[`items.${idx}.quantity`] = 'invalid'
+        }
+        if (Number(it.price) < 0 || isNaN(Number(it.price))) {
+          errs.push(`Item ${idx + 1}: price must be 0 or greater.`)
+          fe[`items.${idx}.price`] = 'invalid'
+        }
+      })
+    }
+
+    return { errors: errs, fieldErrors: fe }
   }
 
   async function handleDownloadPdf(id, invoiceNumber) {
@@ -125,10 +180,23 @@ export default function Invoices() {
 
   async function handleSend(id) {
     try {
-      await sendInvoice(id)
+      setSendingId(id)
+      setNotification(null)
+      const res = await sendInvoice(id)
       await load()
-      alert('Invoice sent (simulated)')
-    } catch (err) { console.error(err); alert('Failed to send') }
+      // res may include mailResult with preview (ethereal)
+      const preview = res && res.mailResult && res.mailResult.preview ? res.mailResult.preview : (res && res.preview ? res.preview : null)
+      const msg = preview ? `Invoice sent — preview: ${preview}` : 'Invoice sent.'
+      setNotification({ type: 'success', message: msg, meta: { preview } })
+    } catch (err) {
+      console.error(err)
+      const message = (err && err.response && err.response.data && err.response.data.error) ? err.response.data.error : (err.message || 'Failed to send')
+      setNotification({ type: 'error', message })
+    } finally {
+      setSendingId(null)
+      // clear notification after a short delay
+      setTimeout(() => setNotification(null), 10000)
+    }
   }
 
   async function handleMarkPaid(id) {
@@ -150,13 +218,13 @@ export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState('')
 
   const totalInvoices = items.length
-  const totalPaid = items.reduce((s,i) => s + (i.status === 'Paid' ? Number(i.total || 0) : 0), 0)
-  const totalOutstanding = items.reduce((s,i) => s + (i.status !== 'Paid' ? Number(i.total || 0) : 0), 0)
-  const overdueCount = items.reduce((s,i) => s + (i.status === 'Overdue' ? 1 : 0), 0)
+  const totalPaid = items.reduce((s, i) => s + (i.status === 'Paid' ? Number(i.total || 0) : 0), 0)
+  const totalOutstanding = items.reduce((s, i) => s + (i.status !== 'Paid' ? Number(i.total || 0) : 0), 0)
+  const overdueCount = items.reduce((s, i) => s + (i.status === 'Overdue' ? 1 : 0), 0)
 
   const filteredItems = items.filter(it => {
     const q = (searchQuery || '').toString().toLowerCase()
-    const matchesQuery = !q || ((it.invoiceNumber||'') + ' ' + (it.customerName||'')).toLowerCase().includes(q)
+    const matchesQuery = !q || ((it.invoiceNumber || '') + ' ' + (it.customerName || '')).toLowerCase().includes(q)
     const matchesStatus = !statusFilter || (it.status === statusFilter)
     return matchesQuery && matchesStatus
   })
@@ -169,7 +237,7 @@ export default function Invoices() {
             <h1 className="text-3xl font-bold">Invoices</h1>
             <p className="text-indigo-100 mt-1">Create, send and track invoice statuses (Paid, Pending, Overdue).</p>
           </div>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <button onClick={() => { setEditingId(null); setForm({ invoiceNumber: '', customerName: '', customerEmail: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 }); setShowForm(true) }} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">New Invoice</button>
           </div>
         </div>
@@ -196,48 +264,107 @@ export default function Invoices() {
 
       {showForm && (
         <form onSubmit={handleCreate} className="bg-white border rounded p-4 mb-4">
+          {errors.length > 0 && (
+            <div className="mb-3 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
+              <div className="font-medium">Please fix the following errors:</div>
+              <ul className="mt-2 list-disc list-inside text-sm">
+                {errors.map((er, i) => <li key={i}>{er}</li>)}
+              </ul>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-600">Invoice #</label>
-              <input value={form.invoiceNumber || ''} placeholder="Auto-generated on save" className="w-full border px-2 py-1 bg-gray-100" disabled />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600">Customer</label>
-              <input value={form.customerName} onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))} className="w-full border px-2 py-1" required />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600">Customer Email</label>
-              <input type="email" value={form.customerEmail || ''} onChange={e => setForm(f => ({ ...f, customerEmail: e.target.value }))} className="w-full border px-2 py-1" placeholder="customer@example.com" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600">Due Date</label>
-              <input type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} className="w-full border px-2 py-1" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600">Template</label>
-              <select value={form.templateName} onChange={e => setForm(f => ({ ...f, templateName: e.target.value }))} className="w-full border px-2 py-1">
-                <option>Standard</option>
-                <option>Professional</option>
-                <option>Minimal</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600">Tax (%)</label>
-              <input type="number" value={form.taxPercent} onChange={e => setForm(f => ({ ...f, taxPercent: Number(e.target.value) }))} className="w-full border px-2 py-1" step="0.01" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600">Discount (amount)</label>
-              <input type="number" value={form.discount} onChange={e => setForm(f => ({ ...f, discount: Number(e.target.value) }))} className="w-full border px-2 py-1" step="0.01" />
-            </div>
+            <StyledInput
+              label="Invoice #"
+              value={form.invoiceNumber || ''}
+              placeholder="Auto-generated on save"
+              wrapperClassName=""
+              inputClassName={`bg-gray-100 ${fieldErrors.invoiceNumber ? 'border-red-500' : ''}`}
+              disabled
+            />
+            <StyledInput
+              label="Customer"
+              value={form.customerName}
+              onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))}
+              wrapperClassName=""
+              inputClassName={`${fieldErrors.customerName ? 'border-red-500' : ''}`}
+              required
+            />
+            <StyledInput
+              label="Customer Email"
+              type="email"
+              value={form.customerEmail || ''}
+              onChange={e => setForm(f => ({ ...f, customerEmail: e.target.value }))}
+              placeholder="customer@example.com"
+              wrapperClassName=""
+              inputClassName={`${fieldErrors.customerEmail ? 'border-red-500' : ''}`}
+              required
+            />
+            <StyledInput
+              label="Due Date"
+              type="date"
+              value={form.dueDate}
+              onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))}
+              wrapperClassName=""
+            />
+
+            <StyledSelect
+              label="Template"
+              options={['Standard', 'Professional', 'Minimal']}
+              value={form.templateName}
+              onChange={e => setForm(f => ({ ...f, templateName: e.target.value }))}
+              wrapperClassName=""
+            />
+            <StyledInput
+              label="Tax (%)"
+              type="number"
+              value={form.taxPercent}
+              onChange={e => setForm(f => ({ ...f, taxPercent: Number(e.target.value) }))}
+              wrapperClassName=""
+              inputClassName={`${fieldErrors.taxPercent ? 'border-red-500' : ''}`}
+              step="0.01"
+            />
+            <StyledInput
+              label="Discount (amount)"
+              type="number"
+              value={form.discount}
+              onChange={e => setForm(f => ({ ...f, discount: Number(e.target.value) }))}
+              wrapperClassName=""
+              inputClassName={`${fieldErrors.discount ? 'border-red-500' : ''}`}
+              step="0.01"
+            />
           </div>
 
           <div className="mt-3">
             <div className="text-sm font-medium mb-2">Items</div>
             {form.items.map((it, idx) => (
-              <div key={idx} className="grid grid-cols-12 gap-2 items-center mb-2">
-                <input className="col-span-6 border px-2 py-1" placeholder="Description" value={it.description} onChange={e => updateItemField(idx, 'description', e.target.value)} required />
-                <input type="number" className="col-span-2 border px-2 py-1" value={it.quantity} onChange={e => updateItemField(idx, 'quantity', e.target.value)} min={1} />
-                <input type="number" className="col-span-2 border px-2 py-1" value={it.price} onChange={e => updateItemField(idx, 'price', e.target.value)} step="0.01" />
+              <div key={idx} className="grid grid-cols-6 gap-2 items-center mb-2">
+                <StyledInput
+                  hideLabel
+                  wrapperClassName="col-span-6"
+                  placeholder="Description"
+                  value={it.description}
+                  onChange={e => updateItemField(idx, 'description', e.target.value)}
+                  required
+                  inputClassName={`${fieldErrors[`items.${idx}.description`] ? 'border-red-500' : ''}`}
+                />
+                <StyledInput
+                  hideLabel
+                  type="number"
+                  wrapperClassName="col-span-2"
+                  value={it.quantity}
+                  onChange={e => updateItemField(idx, 'quantity', e.target.value)}
+                  min={1}
+                  inputClassName={`${fieldErrors[`items.${idx}.quantity`] ? 'border-red-500' : ''}`}
+                />
+                <StyledInput
+                  hideLabel
+                  type="number"
+                  wrapperClassName="col-span-2"
+                  value={it.price}
+                  onChange={e => updateItemField(idx, 'price', e.target.value)}
+                  step="0.01"
+                  inputClassName={`${fieldErrors[`items.${idx}.price`] ? 'border-red-500' : ''}`}
+                />
                 <div className="col-span-1 text-sm">{formatCurrency(it.quantity * it.price)}</div>
                 <button type="button" onClick={() => removeItemRow(idx)} className="col-span-1 text-red-600">✕</button>
               </div>
@@ -270,6 +397,16 @@ export default function Invoices() {
       )}
 
       <div className="bg-white border rounded p-4">
+        {notification && (
+          <div className={`mb-3 p-3 rounded ${notification.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+            <div className="text-sm">{notification.message}</div>
+            {notification.meta && notification.meta.preview && (
+              <div className="text-xs mt-1">
+                <a className="underline" href={notification.meta.preview} target="_blank" rel="noreferrer">Open email preview</a>
+              </div>
+            )}
+          </div>
+        )}
         <div className="mb-4 flex items-center justify-between">
           <h3 className="mb-0 text-lg font-medium">Invoices</h3>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
@@ -277,7 +414,7 @@ export default function Invoices() {
               <StyledInput label="Search" placeholder="Search invoices" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} aria-label="Search invoices" />
             </div>
             <div className="w-full sm:w-48">
-              <StyledSelect label="Status" options={[ 'Paid', 'Pending', 'Overdue' ]} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} aria-label="Filter by status" />
+              <StyledSelect label="Status" options={['Paid', 'Pending', 'Overdue']} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} aria-label="Filter by status" />
             </div>
           </div>
         </div>
@@ -305,7 +442,9 @@ export default function Invoices() {
                   <td className="px-3 py-2 text-sm">{item.status}{item.sentAt ? ' • Sent' : ''}</td>
                   <td className="px-3 py-2 text-sm">
                     <div className="flex gap-2">
-                      <button onClick={() => handleSend(item._id)} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs">Send</button>
+                      <button onClick={() => handleSend(item._id)} disabled={sendingId === item._id} className={`px-2 py-1 rounded text-xs ${sendingId === item._id ? 'bg-indigo-300 text-white cursor-wait' : 'bg-indigo-600 text-white'}`}>
+                        {sendingId === item._id ? 'Sending…' : 'Send'}
+                      </button>
                       <button onClick={() => openEdit(item)} className="px-2 py-1 bg-yellow-400 text-black rounded text-xs">Edit</button>
                       <button onClick={() => handleMarkPaid(item._id)} className="px-2 py-1 bg-gray-200 rounded text-xs">Mark Paid</button>
                       <button onClick={() => handleDelete(item._id)} className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">Delete</button>
