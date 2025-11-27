@@ -1,6 +1,8 @@
 import express from 'express'
 import Invoice from '../models/Invoice.js'
 import puppeteer from 'puppeteer'
+import { sendMail } from '../utils/mail.js'
+import { renderInvoiceHTML } from '../utils/invoiceRenderer.js'
 
 const router = express.Router()
 
@@ -109,19 +111,45 @@ router.delete('/invoices/:id', async (req, res) => {
     }
 })
 
-// POST /api/invoices/:id/send -> simulate sending invoice
+// POST /api/invoices/:id/send -> generate PDF and send invoice by email
 router.post('/invoices/:id/send', async (req, res) => {
     try {
         const invoice = await Invoice.findById(req.params.id)
         if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
 
+        const to = invoice.customerEmail || req.body.to
+        if (!to) return res.status(400).json({ error: 'No recipient email found. Add `customerEmail` to invoice or provide `to` in request body.' })
+
+        // Render HTML and generate PDF buffer
+        const html = renderInvoiceHTML(invoice)
+        const browser = await getBrowser()
+        const page = await (await browser).newPage()
+        await page.setContent(html, { waitUntil: 'networkidle0' })
+        const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' } })
+        await page.close()
+
+        // Build email
+        const subject = `Invoice ${invoice.invoiceNumber}`
+        const text = `Please find attached invoice ${invoice.invoiceNumber}. Total: ${invoice.total}`
+
+        // Send email with PDF attachment
+        const mailResult = await sendMail({
+            to,
+            subject,
+            text,
+            html: `<p>${text}</p>`,
+            attachments: [
+                { filename: `${invoice.invoiceNumber || 'invoice'}.pdf`, content: pdfBuffer }
+            ]
+        })
+
         invoice.sentAt = new Date()
-        if (!invoice.status) invoice.status = 'Pending'
+        invoice.status = invoice.status || 'Sent'
         await invoice.save()
 
-        // In a real app, integrate email / PDF generation here. For now return invoice and a simulated result.
-        res.json({ success: true, sentAt: invoice.sentAt })
+        res.json({ success: true, sentAt: invoice.sentAt, mailResult })
     } catch (err) {
+        console.error('Error sending invoice email:', err)
         res.status(500).json({ error: String(err) })
     }
 })
@@ -143,73 +171,7 @@ async function getBrowser() {
     return browserPromise;
 }
 
-function renderInvoiceHTML(invoice) {
-    const itemsHtml = (invoice.items || []).map(it => `
-    <tr>
-      <td style="padding:8px;border:1px solid #eee">${it.description}</td>
-      <td style="padding:8px;border:1px solid #eee;text-align:center">${it.quantity}</td>
-      <td style="padding:8px;border:1px solid #eee;text-align:right">${Number(it.price).toFixed(2)}</td>
-      <td style="padding:8px;border:1px solid #eee;text-align:right">${(it.quantity * it.price).toFixed(2)}</td>
-    </tr>
-  `).join('');
 
-    const subtotal = invoice.subtotal ?? (invoice.items || []).reduce((s, i) => s + (i.quantity * i.price), 0);
-    const taxAmount = invoice.taxAmount ?? subtotal * ((invoice.taxPercent || 0) / 100);
-    const discount = invoice.discount || 0;
-    const total = invoice.total ?? (subtotal + taxAmount - discount);
-
-    return `<!doctype html>
-  <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Invoice ${invoice.invoiceNumber}</title>
-    <style>
-      body { font-family: Arial, sans-serif; font-size: 12px; color:#222; }
-      .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-      .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-      .logo { font-weight:bold; font-size:18px; }
-      table { width:100%; border-collapse: collapse; margin-top:12px; }
-      th { text-align:left; padding:8px; background:#f5f5f5; border:1px solid #eee; }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <div>
-         <div class="logo">My Company (Pvt) Ltd</div>
-         <div>No. 15, Park Avenue, Nawala Road, Rajagiriya, Sri Lanka</div>
-         <div>Hotline: +94 11 456 7890</div>
-         <div>Email: support@Mycompany.com</div>
-         <div>Web: www.mycompany.com</div>
-        </div>
-        <div>
-          <div><strong>Invoice</strong></div>
-          <div>${invoice.invoiceNumber}</div>
-          <div>${invoice.dueDate ? new Date(invoice.dueDate).toISOString().slice(0, 10) : ''}</div>
-        </div>
-      </div>
-
-      <div><strong>Bill To:</strong> ${invoice.customerName || ''}</div>
-
-      <table>
-        <thead>
-          <tr><th style="width:50%">Description</th><th style="width:10%">Qty</th><th style="width:20%">Price</th><th style="width:20%">Line</th></tr>
-        </thead>
-        <tbody>
-          ${itemsHtml}
-        </tbody>
-      </table>
-
-      <div style="margin-top:12px; text-align:right;">
-        <div>Subtotal: ${subtotal.toFixed(2)}</div>
-        <div>Tax (${invoice.taxPercent || 0}%): ${taxAmount.toFixed(2)}</div>
-        <div>Discount: ${discount.toFixed(2)}</div>
-        <div style="font-weight:bold; margin-top:8px;">Total: ${total.toFixed(2)}</div>
-      </div>
-    </div>
-  </body>
-  </html>`;
-}
 
 router.get('/invoices/:id/pdf', async (req, res) => {
     try {
