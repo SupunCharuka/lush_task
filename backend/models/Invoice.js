@@ -9,6 +9,7 @@ const InvoiceItemSchema = new mongoose.Schema({
 const InvoiceSchema = new mongoose.Schema({
   invoiceNumber: { type: String, required: true, unique: true },
   customerName: { type: String, required: true },
+  customerEmail: { type: String },
   items: { type: [InvoiceItemSchema], default: [] },
   subtotal: { type: Number, required: true, default: 0 },
   taxPercent: { type: Number, required: true, default: 0 },

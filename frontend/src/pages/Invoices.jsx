@@ -8,11 +8,16 @@ function formatCurrency(v) {
   return `$${Number(v || 0).toFixed(2)}`
 }
 
+function isValidEmail(email) {
+  if (!email) return false
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
 export default function Invoices() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ invoiceNumber: '', customerName: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 })
+  const [form, setForm] = useState({ invoiceNumber: '', customerName: '', customerEmail: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 })
   const [editingId, setEditingId] = useState(null)
 
   async function load() {
@@ -58,6 +63,11 @@ export default function Invoices() {
 
   async function handleCreate(e) {
     e?.preventDefault()
+    if (form.customerEmail && !isValidEmail(form.customerEmail)) {
+      alert('Please enter a valid customer email address or leave it blank.')
+      return
+    }
+
     const payload = { ...form, total: computeTotal() }
     if (!payload.invoiceNumber) delete payload.invoiceNumber
     try {
@@ -99,6 +109,7 @@ export default function Invoices() {
     const prepared = {
       invoiceNumber: invoice.invoiceNumber || '',
       customerName: invoice.customerName || '',
+      customerEmail: invoice.customerEmail || '',
       dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().slice(0, 10) : '',
       templateName: invoice.templateName || 'Standard',
       items: (invoice.items && invoice.items.length) ? invoice.items.map(i => ({ description: i.description || '', quantity: i.quantity || 1, price: i.price || 0 })) : [{ description: '', quantity: 1, price: 0 }],
@@ -158,8 +169,8 @@ export default function Invoices() {
             <h1 className="text-3xl font-bold">Invoices</h1>
             <p className="text-indigo-100 mt-1">Create, send and track invoice statuses (Paid, Pending, Overdue).</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => { setEditingId(null); setForm({ invoiceNumber: '', customerName: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 }); setShowForm(true) }} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">New Invoice</button>
+            <div className="flex items-center gap-2">
+            <button onClick={() => { setEditingId(null); setForm({ invoiceNumber: '', customerName: '', customerEmail: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 }); setShowForm(true) }} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">New Invoice</button>
           </div>
         </div>
 
@@ -193,6 +204,10 @@ export default function Invoices() {
             <div>
               <label className="block text-xs text-gray-600">Customer</label>
               <input value={form.customerName} onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))} className="w-full border px-2 py-1" required />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600">Customer Email</label>
+              <input type="email" value={form.customerEmail || ''} onChange={e => setForm(f => ({ ...f, customerEmail: e.target.value }))} className="w-full border px-2 py-1" placeholder="customer@example.com" />
             </div>
             <div>
               <label className="block text-xs text-gray-600">Due Date</label>
@@ -247,7 +262,7 @@ export default function Invoices() {
             </div>
             <div className="text-sm text-gray-700 mt-2">Total: <strong>{formatCurrency(computeTotal())}</strong></div>
             <div className="flex gap-2 mt-3">
-              <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setForm({ invoiceNumber: '', customerName: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 }) }} className="px-3 py-1 border rounded">Cancel</button>
+              <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setForm({ invoiceNumber: '', customerName: '', customerEmail: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 }) }} className="px-3 py-1 border rounded">Cancel</button>
               <button type="submit" className="px-3 py-1 bg-green-600 text-white rounded">Create</button>
             </div>
           </div>
@@ -272,6 +287,7 @@ export default function Invoices() {
               <tr>
                 <th className="px-3 py-2 text-left text-sm text-gray-600">Invoice #</th>
                 <th className="px-3 py-2 text-left text-sm text-gray-600">Customer</th>
+                <th className="px-3 py-2 text-left text-sm text-gray-600">Email</th>
                 <th className="px-3 py-2 text-left text-sm text-gray-600">Amount</th>
                 <th className="px-3 py-2 text-left text-sm text-gray-600">Due</th>
                 <th className="px-3 py-2 text-left text-sm text-gray-600">Status</th>
@@ -283,6 +299,7 @@ export default function Invoices() {
                 <tr key={item._id}>
                   <td className="px-3 py-2 text-sm">{item.invoiceNumber}</td>
                   <td className="px-3 py-2 text-sm">{item.customerName}</td>
+                  <td className="px-3 py-2 text-sm">{item.customerEmail || '-'}</td>
                   <td className="px-3 py-2 text-sm">{formatCurrency(item.total)}</td>
                   <td className="px-3 py-2 text-sm">{item.dueDate ? new Date(item.dueDate).toISOString().slice(0, 10) : '-'}</td>
                   <td className="px-3 py-2 text-sm">{item.status}{item.sentAt ? ' • Sent' : ''}</td>
