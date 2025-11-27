@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import campaignsRouter from './routes/campaigns.js'
 import incomesRouter from './routes/incomes.js'
+import expensesRouter from './routes/expenses.js'
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(
 // API routes
 app.use('/api', campaignsRouter)
 app.use('/api', incomesRouter)
+app.use('/api', expensesRouter)
 
 
 
