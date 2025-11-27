@@ -3,6 +3,7 @@ import { PORT, mongoDBURL } from './config.js';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import campaignsRouter from './routes/campaigns.js'
+import incomesRouter from './routes/incomes.js'
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(
 
 // API routes
 app.use('/api', campaignsRouter)
+app.use('/api', incomesRouter)
 
 
 
