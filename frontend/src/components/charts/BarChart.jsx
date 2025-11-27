@@ -4,14 +4,14 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-export default function BarChart({labels = [], data = [], title = ''}){
+export default function BarChart({ labels = [], data = [], title = '', backgroundColors = null }){
   const chartData = {
     labels,
     datasets: [
       {
         label: title || 'Dataset',
         data,
-        backgroundColor: 'rgba(54,162,235,0.6)'
+        backgroundColor: backgroundColors || 'rgba(54,162,235,0.6)'
       }
     ]
   }

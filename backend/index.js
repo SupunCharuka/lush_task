@@ -8,6 +8,7 @@ import incomesRouter from './routes/incomes.js'
 import expensesRouter from './routes/expenses.js'
 import invoicesRouter from './routes/invoices.js'
 import { markOverdue } from './routes/invoices.js'
+import metricsRouter from './routes/metrics.js'
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api', campaignsRouter)
 app.use('/api', incomesRouter)
 app.use('/api', expensesRouter)
 app.use('/api', invoicesRouter)
+app.use('/api/metrics', metricsRouter)
 
 
 
