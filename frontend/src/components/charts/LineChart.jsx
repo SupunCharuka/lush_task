@@ -4,7 +4,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
-export default function LineChart({ labels = [], data = [], title = '' }) {
+export default function LineChart({ labels = [], data = [], title = '', tickSuffix = '' }) {
   const chartData = {
     labels,
     datasets: [
@@ -28,8 +28,8 @@ export default function LineChart({ labels = [], data = [], title = '' }) {
         beginAtZero: true,
         ticks: {
           callback: function (val) {
-            return `${val}%`
-          }
+              return `${val}${tickSuffix}`
+            }
         }
       }
     }
