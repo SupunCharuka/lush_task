@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { getInvoices, createInvoice, sendInvoice, updateInvoice, deleteInvoice } from '../api/invoice'
+import StyledInput from '../components/inputs/StyledInput'
+import StyledSelect from '../components/inputs/StyledSelect'
 import { downloadInvoicePDF } from '../api/invoice'
 
 function formatCurrency(v) {
@@ -133,13 +135,52 @@ export default function Invoices() {
     } catch (e) { console.error(e) }
   }
 
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+
+  const totalInvoices = items.length
+  const totalPaid = items.reduce((s,i) => s + (i.status === 'Paid' ? Number(i.total || 0) : 0), 0)
+  const totalOutstanding = items.reduce((s,i) => s + (i.status !== 'Paid' ? Number(i.total || 0) : 0), 0)
+  const overdueCount = items.reduce((s,i) => s + (i.status === 'Overdue' ? 1 : 0), 0)
+
+  const filteredItems = items.filter(it => {
+    const q = (searchQuery || '').toString().toLowerCase()
+    const matchesQuery = !q || ((it.invoiceNumber||'') + ' ' + (it.customerName||'')).toLowerCase().includes(q)
+    const matchesStatus = !statusFilter || (it.status === statusFilter)
+    return matchesQuery && matchesStatus
+  })
+
   return (
     <div className="max-w-7xl mx-auto p-4">
-      <h2 className="text-2xl font-semibold mb-2">Invoice Management</h2>
-      <p className="mb-4 text-gray-600">Create and send invoices; track statuses (Paid, Pending, Overdue).</p>
-      <div className="flex items-center gap-2 mb-3">
-        <button onClick={() => setShowForm(true)} className="px-3 py-2 bg-blue-600 text-white rounded">Create Invoice</button>
-        <div className="text-sm text-gray-600">{loading ? 'Loading...' : `${items.length} invoices`}</div>
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg p-6 mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Invoices</h1>
+            <p className="text-indigo-100 mt-1">Create, send and track invoice statuses (Paid, Pending, Overdue).</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => { setEditingId(null); setForm({ invoiceNumber: '', customerName: '', dueDate: '', templateName: 'Standard', items: [{ description: '', quantity: 1, price: 0 }], notes: '', taxPercent: 0, discount: 0 }); setShowForm(true) }} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">New Invoice</button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
+          <div className="bg-white/5 p-3 rounded">
+            <div className="text-sm text-indigo-100">Total Invoices</div>
+            <div className="text-xl font-semibold">{totalInvoices}</div>
+          </div>
+          <div className="bg-white/5 p-3 rounded">
+            <div className="text-sm text-indigo-100">Total Paid</div>
+            <div className="text-xl font-semibold">{formatCurrency(totalPaid)}</div>
+          </div>
+          <div className="bg-white/5 p-3 rounded">
+            <div className="text-sm text-indigo-100">Outstanding</div>
+            <div className="text-xl font-semibold">{formatCurrency(totalOutstanding)}</div>
+          </div>
+          <div className="bg-white/5 p-3 rounded">
+            <div className="text-sm text-indigo-100">Overdue</div>
+            <div className="text-xl font-semibold">{overdueCount}</div>
+          </div>
+        </div>
       </div>
 
       {showForm && (
@@ -214,6 +255,17 @@ export default function Invoices() {
       )}
 
       <div className="bg-white border rounded p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="mb-0 text-lg font-medium">Invoices</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+            <div className="w-full sm:w-64">
+              <StyledInput label="Search" placeholder="Search invoices" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} aria-label="Search invoices" />
+            </div>
+            <div className="w-full sm:w-48">
+              <StyledSelect label="Status" options={[ 'Paid', 'Pending', 'Overdue' ]} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} aria-label="Filter by status" />
+            </div>
+          </div>
+        </div>
         <div className="overflow-auto">
           <table className="min-w-full divide-y">
             <thead className="bg-gray-50">
@@ -227,7 +279,7 @@ export default function Invoices() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y">
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <tr key={item._id}>
                   <td className="px-3 py-2 text-sm">{item.invoiceNumber}</td>
                   <td className="px-3 py-2 text-sm">{item.customerName}</td>
@@ -245,7 +297,7 @@ export default function Invoices() {
                   </td>
                 </tr>
               ))}
-              {items.length === 0 && (
+              {filteredItems.length === 0 && (
                 <tr><td colSpan={6} className="px-3 py-4 text-center text-sm text-gray-500">No invoices</td></tr>
               )}
             </tbody>

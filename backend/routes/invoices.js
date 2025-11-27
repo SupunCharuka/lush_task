@@ -126,6 +126,16 @@ router.post('/invoices/:id/send', async (req, res) => {
     }
 })
 
+// GET /api/invoices/check-overdue -> run overdue check now (manual)
+router.get('/invoices/check-overdue', async (req, res) => {
+    try {
+        const result = await markOverdue()
+        res.json({ success: true, result })
+    } catch (err) {
+        res.status(500).json({ error: String(err) })
+    }
+})
+
 // Reuse browser across requests (improves performance)
 let browserPromise = null;
 async function getBrowser() {
@@ -223,3 +233,20 @@ router.get('/invoices/:id/pdf', async (req, res) => {
 });
 
 export default router
+
+// Helper to mark invoices as Overdue when dueDate has passed
+export async function markOverdue() {
+    try {
+        const now = new Date()
+        // Find invoices that are past due and not paid or already overdue
+        const result = await Invoice.updateMany(
+            { dueDate: { $lt: now }, status: { $nin: ['Paid', 'Overdue'] } },
+            { $set: { status: 'Overdue' } }
+        )
+        return result
+    } catch (err) {
+        console.error('markOverdue error', err)
+        throw err
+    }
+}
+
