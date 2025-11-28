@@ -1,17 +1,25 @@
 import React from 'react'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
-
-const items = [
-  {to: '/', label: 'Dashboard'},
-  {to: '/marketing', label: 'Marketing'},
-  {to: '/income', label: 'Income'},
-  {to: '/expenses', label: 'Expenses'},
-  {to: '/invoices', label: 'Invoices'},
-  {to: '/reports', label: 'Reports'},
-]
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Sidebar({ mobileOpen, onDrawerToggle, drawerWidth = 240 }){
   const location = useLocation()
+  const { user, hasRole } = useAuth()
+
+  const baseItems = [
+    {to: '/', label: 'Dashboard'},
+    {to: '/marketing', label: 'Marketing'},
+    {to: '/income', label: 'Income'},
+    {to: '/expenses', label: 'Expenses'},
+    {to: '/invoices', label: 'Invoices'},
+    {to: '/reports', label: 'Reports'},
+    {to: '/users/create', label: 'Create User'},
+  ]
+
+  const items = [...baseItems]
+  // show Roles only to admins / users with admin role
+  const isAdmin = user ? (user.role === 'admin' || hasRole('admin')) : false
+  if (isAdmin) items.splice(items.length - 1, 0, { to: '/roles', label: 'Roles' })
 
   const content = (
     <div className="sidebar-content" role="presentation">

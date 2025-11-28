@@ -3,6 +3,7 @@ import Income from '../models/Income.js'
 import Expense from '../models/Expense.js'
 import puppeteer from 'puppeteer'
 import ExcelJS from 'exceljs'
+import { requirePermission } from '../middleware/authorization.js'
 
 const router = express.Router()
 
@@ -17,7 +18,7 @@ function parseDateRange(from, to) {
 }
 
 // GET /api/reports/export?type=income|expense&format=pdf|excel&from=YYYY-MM-DD&to=YYYY-MM-DD
-router.get('/reports/export', async (req, res) => {
+router.get('/reports/export', requirePermission('reports:read'), async (req, res) => {
   try {
     const { type = 'income', format = 'pdf', from, to } = req.query
     const Model = type === 'expense' ? Expense : Income
