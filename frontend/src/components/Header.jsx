@@ -10,7 +10,7 @@ export default function Header({ onDrawerToggle }) {
   }
 
   return (
-    <header className="app-header">
+    <header className="app-header header-gradient">
       <div className="app-header-inner">
         <button
           onClick={onDrawerToggle}
@@ -20,18 +20,19 @@ export default function Header({ onDrawerToggle }) {
           ☰
         </button>
 
-        <div className="brand">Internal Management</div>
+        <div className="brand">Finance & Marketing</div>
 
         <div className="header-spacer" />
 
         <div className="header-controls">
+
           {user ? (
-            <div className="flex items-center gap-3">
-              <div className="text-sm">{user.name}</div>
-              <button onClick={logout} className="px-2 py-1 rounded border text-sm">Logout</button>
+            <div className="user-area">
+              <div className="user-name">{user.name}</div>
+              <button onClick={logout} className="header-button">Logout</button>
             </div>
           ) : (
-            <Link to="/login" className="px-2 py-1 rounded border text-sm">Sign in</Link>
+            <Link to="/login" className="header-button">Sign in</Link>
           )}
         </div>
       </div>
