@@ -1,7 +1,6 @@
 
 import axios from 'axios'
-
-const API_BASE = 'http://localhost:5000/api'
+import API_BASE from './config'
 
 export async function getCampaigns(){
 	const res = await axios.get(`${API_BASE}/campaigns`)
@@ -33,5 +32,5 @@ export async function getMonthlyCampaigns(){
 	return res.data
 }
 
-export default API_BASE
+
 

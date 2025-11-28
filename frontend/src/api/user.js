@@ -1,5 +1,5 @@
 import axios from 'axios'
-const API_BASE = 'http://localhost:5000/api'
+import API_BASE from './config'
 
 export async function createUser(payload){
   const res = await axios.post(`${API_BASE}/users`, payload)
@@ -16,4 +16,4 @@ export async function login(payload){
   return res.data
 }
 
-export default API_BASE
+

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE = 'http://localhost:5000/api'
+import API_BASE from './config'
 
 export async function getInvoices(){
   const res = await axios.get(`${API_BASE}/invoices`)
@@ -32,4 +32,4 @@ export async function downloadInvoicePDF(id) {
   return res.data; // blob
 }
 
-export default API_BASE
+

@@ -1,5 +1,5 @@
 import axios from 'axios'
-const API_BASE = 'http://localhost:5000/api'
+import API_BASE from './config'
 
 export async function getRoles(){
   const res = await axios.get(`${API_BASE}/roles`)

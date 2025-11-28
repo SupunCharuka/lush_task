@@ -1,6 +1,5 @@
-// frontend/src/api/expense.js
 import axios from 'axios'
-const API_BASE = 'http://localhost:5000/api'
+import API_BASE from './config'
 
 export async function getExpenses(){
   const res = await axios.get(`${API_BASE}/expenses`)
@@ -22,4 +21,3 @@ export async function getMonthlyExpenseSummary(){
   const res = await axios.get(`${API_BASE}/expenses/monthly-summary`)
   return res.data
 }
-export default API_BASE
