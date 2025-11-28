@@ -11,4 +11,9 @@ export async function getUsers(){
   return res.data
 }
 
+export async function login(payload){
+  const res = await axios.post(`${API_BASE}/auth/login`, payload)
+  return res.data
+}
+
 export default API_BASE

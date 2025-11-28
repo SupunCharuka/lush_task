@@ -35,9 +35,18 @@ router.post('/users', async (req, res) => {
 
     const userData = { name: name.trim(), email: email.toLowerCase().trim(), role, passwordHash }
 
-    // Resolve roles if provided (allow names or ids)
+    // Resolve roles if provided (allow names or ids).
+    // Only allow assigning roles if the requester is admin (prevent privilege escalation).
     if (Array.isArray(roles) && roles.length) {
-      const resolved = []
+      let canAssign = false
+      if (req.user) {
+        if (req.user.role === 'admin') canAssign = true
+        else if (typeof req.user.hasRole === 'function') {
+          try { canAssign = await req.user.hasRole('admin') } catch (e) { canAssign = false }
+        }
+      }
+      if (canAssign) {
+        const resolved = []
       for (const r of roles) {
         let roleDoc = null
         if (typeof r === 'string' && /^[0-9a-fA-F]{24}$/.test(r)) {
@@ -49,6 +58,7 @@ router.post('/users', async (req, res) => {
         if (roleDoc) resolved.push(roleDoc._id)
       }
       if (resolved.length) userData.roles = resolved
+      }
     }
 
     const user = new User(userData)

@@ -1,6 +1,7 @@
 import express from 'express'
 import Role from '../models/Role.js'
 import Permission from '../models/Permission.js'
+import { requireRole } from '../middleware/authorization.js'
 
 const router = express.Router()
 
@@ -16,7 +17,8 @@ router.get('/roles', async (req, res) => {
 
 // POST /api/roles
 // body: { name, description, permissions: [ids or names] }
-router.post('/roles', async (req, res) => {
+// Protected: only admins may create roles
+router.post('/roles', requireRole('admin'), async (req, res) => {
   try {
     const { name, description = '', permissions = [] } = req.body
     if (!name) return res.status(400).json({ error: 'Role name is required' })

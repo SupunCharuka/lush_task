@@ -1,4 +1,5 @@
 import React, {useState} from 'react'
+import { AuthProvider } from './contexts/AuthContext'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
@@ -10,6 +11,8 @@ import Invoices from './pages/Invoices'
 import Reports from './pages/Reports'
 import CreateUser from './pages/CreateUser'
 import Roles from './pages/Roles'
+import Login from './pages/Login'
+import ProtectedRoute from './components/ProtectedRoute'
 
 const drawerWidth = 240
 
@@ -18,25 +21,31 @@ export default function App() {
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen)
 
   return (
-    <BrowserRouter>
-      <div className="app-root">
-        <Header onDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
-        <Sidebar mobileOpen={mobileOpen} onDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="app-root">
+          <Header onDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
+          <Sidebar mobileOpen={mobileOpen} onDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
 
-        <main className={`app-main p-4 md:ml-[${drawerWidth}px]`}>
-        
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/marketing" element={<Marketing />} />
-            <Route path="/income" element={<Income />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/users/create" element={<CreateUser />} />
-            <Route path="/roles" element={<Roles />} />
-            <Route path="/reports" element={<Reports />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+          <main className={`app-main p-4 md:ml-[${drawerWidth}px]`}>
+
+            <Routes>
+              <Route path="/login" element={<Login />} />
+
+              <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/marketing" element={<Marketing />} />
+                <Route path="/income" element={<Income />} />
+                <Route path="/expenses" element={<Expenses />} />
+                <Route path="/invoices" element={<Invoices />} />
+                <Route path="/users/create" element={<CreateUser />} />
+                <Route path="/roles" element={<Roles />} />
+                <Route path="/reports" element={<Reports />} />
+              </Route>
+            </Routes>
+          </main>
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
