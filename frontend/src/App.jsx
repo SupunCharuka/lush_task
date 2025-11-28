@@ -9,6 +9,7 @@ import Expenses from './pages/Expenses'
 import Invoices from './pages/Invoices'
 import Reports from './pages/Reports'
 import CreateUser from './pages/CreateUser'
+import Roles from './pages/Roles'
 
 const drawerWidth = 240
 
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/users/create" element={<CreateUser />} />
+            <Route path="/roles" element={<Roles />} />
             <Route path="/reports" element={<Reports />} />
           </Routes>
         </main>

@@ -1,6 +1,7 @@
 import express from 'express'
 import bcrypt from 'bcrypt'
 import User from '../models/User.js'
+import Role from '../models/Role.js'
 
 const router = express.Router()
 
@@ -15,9 +16,10 @@ router.get('/users', async (req, res) => {
 })
 
 // POST /api/users
+// Accepts optional `roles` array (role names or ids). Falls back to legacy `role` string.
 router.post('/users', async (req, res) => {
   try {
-    const { name, email, role = 'user', password } = req.body
+    const { name, email, role = 'user', roles = [], password } = req.body
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email and password are required' })
@@ -31,11 +33,29 @@ router.post('/users', async (req, res) => {
     const saltRounds = 10
     const passwordHash = await bcrypt.hash(password, saltRounds)
 
-    const user = new User({ name: name.trim(), email: email.toLowerCase().trim(), role, passwordHash })
+    const userData = { name: name.trim(), email: email.toLowerCase().trim(), role, passwordHash }
+
+    // Resolve roles if provided (allow names or ids)
+    if (Array.isArray(roles) && roles.length) {
+      const resolved = []
+      for (const r of roles) {
+        let roleDoc = null
+        if (typeof r === 'string' && /^[0-9a-fA-F]{24}$/.test(r)) {
+          roleDoc = await Role.findById(r)
+        }
+        if (!roleDoc && typeof r === 'string') {
+          roleDoc = await Role.findOne({ name: r })
+        }
+        if (roleDoc) resolved.push(roleDoc._id)
+      }
+      if (resolved.length) userData.roles = resolved
+    }
+
+    const user = new User(userData)
     const saved = await user.save()
 
     // Return sanitized user data
-    const out = { id: saved._id, name: saved.name, email: saved.email, role: saved.role, createdAt: saved.createdAt }
+    const out = { id: saved._id, name: saved.name, email: saved.email, role: saved.role, roles: saved.roles || [], createdAt: saved.createdAt }
     res.status(201).json(out)
   } catch (err) {
     res.status(400).json({ message: String(err) })

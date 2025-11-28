@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import StyledInput from '../components/inputs/StyledInput'
 import StyledSelect from '../components/inputs/StyledSelect'
 import { createUser, getUsers } from '../api/user'
+import { getRoles } from '../api/role'
 
 export default function CreateUser(){
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('user')
+  const [availableRoles, setAvailableRoles] = useState(['user','admin'])
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,6 +28,16 @@ export default function CreateUser(){
       }
     }
     loadUsers()
+    // load roles for assignment
+    async function loadRoles(){
+      try{
+        const r = await getRoles()
+        if(Array.isArray(r) && r.length) setAvailableRoles(r.map(x => x.name || x))
+      }catch(e){
+        // fallback stays
+      }
+    }
+    loadRoles()
   }, [])
 
   const handleSubmit = async (e) => {
@@ -50,7 +62,10 @@ export default function CreateUser(){
 
     setLoading(true)
     try{
+      // allow sending either legacy role string or roles array
       const payload = { name: name.trim(), email: email.trim(), role, password }
+      // if user selected a role that is not the default 'user' string, send it as roles arr
+      if (role && role !== 'user') payload.roles = [role]
       await createUser(payload)
       setSuccess('User created successfully')
       setName('')
@@ -123,7 +138,7 @@ export default function CreateUser(){
 
             <form onSubmit={handleSubmit} className="bg-gray-50 border p-3 mb-4 rounded">
               {error && <div className="text-red-600 mb-2">{error}</div>}
-              {success && <div className="text-green-600">{success}</div>}
+              {success && <div className="text-green-600 mb-2">{success}</div>}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <StyledInput
@@ -145,7 +160,7 @@ export default function CreateUser(){
                   label="Role"
                   value={role}
                   onChange={e => setRole(e.target.value)}
-                  options={["user", "admin"]}
+                  options={availableRoles}
                 />
 
                 <StyledInput

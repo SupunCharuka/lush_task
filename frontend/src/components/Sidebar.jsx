@@ -7,8 +7,9 @@ const items = [
   {to: '/income', label: 'Income'},
   {to: '/expenses', label: 'Expenses'},
   {to: '/invoices', label: 'Invoices'},
-  {to: '/users/create', label: 'Create User'},
   {to: '/reports', label: 'Reports'},
+  {to: '/users/create', label: 'Create User'},
+  {to:'/roles', label: 'Roles'}
 ]
 
 export default function Sidebar({ mobileOpen, onDrawerToggle, drawerWidth = 240 }){
