@@ -5,11 +5,11 @@ import StyledSelect from '../components/inputs/StyledSelect'
 import { createUser, getUsers } from '../api/user'
 import { getRoles } from '../api/role'
 
-export default function CreateUser(){
+export default function CreateUser() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState('user')
-  const [availableRoles, setAvailableRoles] = useState(['user','admin'])
+  const [role, setRole] = useState('')
+  const [availableRoles, setAvailableRoles] = useState([])
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,22 +19,27 @@ export default function CreateUser(){
   const navigate = useNavigate()
 
   useEffect(() => {
-    async function loadUsers(){
-      try{
+    async function loadUsers() {
+      try {
         const u = await getUsers()
         setUsers(u || [])
-      }catch(e){
+      } catch (e) {
         console.error('Failed to load users', e)
       }
     }
     loadUsers()
     // load roles for assignment
-    async function loadRoles(){
-      try{
+    async function loadRoles() {
+      try {
         const r = await getRoles()
-        if(Array.isArray(r) && r.length) setAvailableRoles(r.map(x => x.name || x))
-      }catch(e){
-        // fallback stays
+        if (Array.isArray(r) && r.length) {
+          const mapped = r.map(x => x.name || x)
+          setAvailableRoles(mapped)
+          
+          setRole(prev => prev || mapped[0] || '')
+        }
+      } catch (e) {
+        // fallback stays (empty list)
       }
     }
     loadRoles()
@@ -45,47 +50,48 @@ export default function CreateUser(){
     setError('')
     setSuccess('')
 
-    if(!name.trim() || !email.trim()){
+    if (!name.trim() || !email.trim()) {
       setError('Name and email are required')
       return
     }
 
-    if(password.length < 6){
+    if (password.length < 6) {
       setError('Password must be at least 6 characters')
       return
     }
 
-    if(password !== confirmPassword){
+    if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
     }
 
     setLoading(true)
-    try{
-      // allow sending either legacy role string or roles array
+    try {
+
       const payload = { name: name.trim(), email: email.trim(), role, password }
-      // if user selected a role that is not the default 'user' string, send it as roles arr
-      if (role && role !== 'user') payload.roles = [role]
+
+      const defaultRole = availableRoles[0] || ''
+      if (role && role !== defaultRole) payload.roles = [role]
       await createUser(payload)
       setSuccess('User created successfully')
       setName('')
       setEmail('')
-      setRole('user')
+      setRole(availableRoles[0] || '')
       setPassword('')
       setConfirmPassword('')
       // refresh users list after successful creation
       try { const u = await getUsers(); setUsers(u || []) } catch (e) { console.error('Failed to refresh users', e) }
-    }catch(err){
+    } catch (err) {
       console.error(err)
       setError(err?.response?.data?.message || 'Failed to create user')
-    }finally{
+    } finally {
       setLoading(false)
     }
   }
 
-  function fmtDate(s){
-    if(!s) return '—'
-    try{ const d = new Date(s); return d.toLocaleString() }catch(e){ return '—' }
+  function fmtDate(s) {
+    if (!s) return '—'
+    try { const d = new Date(s); return d.toLocaleString() } catch (e) { return '—' }
   }
 
   const totalUsers = users.length

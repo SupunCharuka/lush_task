@@ -3,8 +3,7 @@ import mongoose from 'mongoose'
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  // legacy simple role string (kept for backward compatibility)
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, default: 'user' },
   // new: many-to-many relation to Role documents
   roles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Role' }],
   passwordHash: { type: String, required: true },

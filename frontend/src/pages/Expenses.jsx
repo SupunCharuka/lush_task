@@ -46,9 +46,6 @@ export default function Expenses() {
     try {
       const s = await getMonthlyExpenseSummary()
       setMonthly({ labels: s.labels || [], totals: s.totals || [] })
-
-      // build category breakdown from current items (simple client-side aggregation)
-      // if API provides category summary, prefer that; otherwise compute from items after fetch
       // here we compute after fetching items
       const byCat = (await getExpenses() || []).reduce((acc, it) => {
         const k = it.category || 'Uncategorized'
@@ -139,7 +136,7 @@ export default function Expenses() {
 
 
 
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg p-6 mb-6">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg p-6 mb-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">Expenses</h1>

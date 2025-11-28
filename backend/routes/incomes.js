@@ -1,10 +1,11 @@
 import express from 'express'
 import Income from '../models/Income.js'
+import { requirePermission } from '../middleware/authorization.js'
 
 const router = express.Router()
 
 // GET /api/incomes
-router.get('/incomes', async (req, res) => {
+router.get('/incomes', requirePermission('incomes:manage'), async (req, res) => {
   try {
     const items = await Income.find().sort({ date: -1 })
     res.json(items)
@@ -14,7 +15,7 @@ router.get('/incomes', async (req, res) => {
 })
 
 // POST /api/incomes
-router.post('/incomes', async (req, res) => {
+router.post('/incomes', requirePermission('incomes:manage'), async (req, res) => {
   try {
     const income = new Income(req.body)
     const saved = await income.save()
@@ -25,7 +26,7 @@ router.post('/incomes', async (req, res) => {
 })
 
 // PUT /api/incomes/:id
-router.put('/incomes/:id', async (req, res) => {
+router.put('/incomes/:id', requirePermission('incomes:manage'), async (req, res) => {
   try {
     const updated = await Income.findByIdAndUpdate(req.params.id, req.body, { new: true })
     res.json(updated)
@@ -35,7 +36,7 @@ router.put('/incomes/:id', async (req, res) => {
 })
 
 // DELETE /api/incomes/:id
-router.delete('/incomes/:id', async (req, res) => {
+router.delete('/incomes/:id', requirePermission('incomes:manage'), async (req, res) => {
   try {
     await Income.findByIdAndDelete(req.params.id)
     res.json({ success: true })
@@ -45,7 +46,7 @@ router.delete('/incomes/:id', async (req, res) => {
 })
 
 // GET /api/incomes/monthly-summary
-router.get('/incomes/monthly-summary', async (req, res) => {
+router.get('/incomes/monthly-summary', requirePermission('incomes:manage'), async (req, res) => {
   try {
     const agg = await Income.aggregate([
       { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$amount' }, count: { $sum: 1 } } },

@@ -9,9 +9,21 @@ async function seed() {
   console.log('Connected to DB for seeding roles/permissions')
 
   const permissions = [
-    'invoices:create','invoices:read','invoices:update','invoices:delete',
+    // Invoices
+    'invoices:create','invoices:read','invoices:update','invoices:delete','invoices:send','invoices:pdf',
+    // Users
     'users:read','users:create','users:update','users:delete',
-    'campaigns:manage','expenses:manage','incomes:manage','reports:read'
+    // Campaigns
+    'campaigns:manage','campaigns:create','campaigns:read','campaigns:update','campaigns:delete',
+    // Expenses
+    'expenses:manage','expenses:create','expenses:read','expenses:update','expenses:delete',
+    // Incomes
+    'incomes:manage','incomes:create','incomes:read','incomes:update','incomes:delete',
+    // Reports / metrics
+    'reports:read','metrics:read',
+    // Roles & permissions management
+    'roles:read','roles:create','roles:update','roles:delete',
+    'permissions:read','permissions:create','permissions:update','permissions:delete'
   ]
 
   const permDocs = []

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import axios from 'axios'
 import ChartPlaceholder from '../components/ChartPlaceholder'
 import LineChart from '../components/charts/LineChart'
 import BarChart from '../components/charts/BarChart'
@@ -23,16 +24,16 @@ export default function Reports() {
       setLoading(true)
       try {
         const [incResp, expResp] = await Promise.all([
-          fetch(`${apiBase}/api/incomes`).then(r => r.json()),
-          fetch(`${apiBase}/api/expenses`).then(r => r.json())
+          axios.get(`${apiBase}/api/incomes`).then(r => r.data),
+          axios.get(`${apiBase}/api/expenses`).then(r => r.data)
         ])
         setIncomes(Array.isArray(incResp) ? incResp : [])
         setExpenses(Array.isArray(expResp) ? expResp : [])
         // fetch monthly summaries for charts
         try {
           const [incSum, expSum] = await Promise.all([
-            fetch(`${apiBase}/api/incomes/monthly-summary`).then(r => r.json()),
-            fetch(`${apiBase}/api/expenses/monthly-summary`).then(r => r.json())
+            axios.get(`${apiBase}/api/incomes/monthly-summary`).then(r => r.data),
+            axios.get(`${apiBase}/api/expenses/monthly-summary`).then(r => r.data)
           ])
           setIncomeSummary(incSum)
           setExpenseSummary(expSum)
@@ -83,12 +84,8 @@ export default function Reports() {
       const params = new URLSearchParams({ type, format })
       if (from) params.set('from', from)
       if (to) params.set('to', to)
-      const resp = await fetch(`${apiBase}/api/reports/export?${params.toString()}`)
-      if (!resp.ok) {
-        const txt = await resp.text()
-        throw new Error(txt || 'Export failed')
-      }
-      const blob = await resp.blob()
+      const resp = await axios.get(`${apiBase}/api/reports/export?${params.toString()}`, { responseType: 'blob' })
+      const blob = resp.data
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       const ext = format === 'excel' ? 'xlsx' : 'pdf'
