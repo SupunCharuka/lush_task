@@ -10,6 +10,7 @@ import invoicesRouter from './routes/invoices.js'
 import { markOverdue } from './routes/invoices.js'
 import metricsRouter from './routes/metrics.js'
 import reportsRouter from './routes/reports.js'
+import usersRouter from './routes/users.js'
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use('/api', campaignsRouter)
 app.use('/api', incomesRouter)
 app.use('/api', expensesRouter)
 app.use('/api', invoicesRouter)
+app.use('/api', usersRouter)
 app.use('/api/metrics', metricsRouter)
 app.use('/api', reportsRouter)
 
