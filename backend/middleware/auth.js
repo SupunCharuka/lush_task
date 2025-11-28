@@ -1,10 +1,6 @@
 import User from '../models/User.js'
 
-// Very small dev auth middleware.
-// Supports two modes for convenience during development:
-// - Authorization: Bearer <userId>
-// - x-user-id: <userId>
-// If provided, it loads the User document and sets `req.user`.
+
 export default async function devAuth(req, res, next) {
   try {
     const auth = req.headers['authorization']
