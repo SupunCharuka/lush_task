@@ -60,17 +60,3 @@ Notes & security
 
 - `backend/config.js` contains a default `mongoDBURL` fallback. For production, always set `MONGODB_URL` and do not commit credentials.
 - SMTP and admin credentials should be provided via environment variables in production.
-
-
-Further development
-
-- API routes are in `backend/routes/`.
-- Database models are in `backend/models/`.
-- Frontend pages are in `frontend/src/pages/`.
-
-If you'd like, I can also:
-- add a sample `.env.example` in `backend/`
-- delete or rename the empty `READEME.md` file (typo) to avoid confusion
-
----
-Created by project tooling for developer setup.
