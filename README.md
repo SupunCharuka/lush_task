@@ -56,38 +56,11 @@ cd backend
 node seed/seedRoles.js
 ```
 
-2. Create or update admin user
-
-```powershell
-cd backend
-# Optionally set environment variables for the admin user
-$env:ADMIN_EMAIL = 'admin@example.com'; $env:ADMIN_PASSWORD = 'password'; $env:ADMIN_NAME = 'Admin'
-node seed/createAdmin.js
-```
-
 Notes & security
 
 - `backend/config.js` contains a default `mongoDBURL` fallback. For production, always set `MONGODB_URL` and do not commit credentials.
 - SMTP and admin credentials should be provided via environment variables in production.
 
-Packaging / build
-
-Front-end build:
-
-```powershell
-cd frontend
-npm run build
-# preview the built site
-npm run preview
-```
-
-Backend run in production:
-
-```powershell
-cd backend
-npm install --production
-npm start
-```
 
 Further development
 
