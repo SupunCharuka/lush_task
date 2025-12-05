@@ -28,8 +28,6 @@ app.use(cors({
 // respond to preflight for all routes
 app.options('*', cors())
 
-// Lightweight dev auth: sets req.user when Authorization header contains a user id
-app.use(devAuth)
 
 // API routes
 app.use('/api', campaignsRouter)
