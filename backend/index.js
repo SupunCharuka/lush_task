@@ -19,14 +19,17 @@ const app = express();
 
 app.use(express.json());
 
-// Lightweight dev auth: sets req.user when Authorization header contains a user id
-app.use(devAuth)
-
+// Enable CORS early so preflight OPTIONS requests receive proper headers
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }))
+// respond to preflight for all routes
+app.options('*', cors())
+
+// Lightweight dev auth: sets req.user when Authorization header contains a user id
+app.use(devAuth)
 
 // API routes
 app.use('/api', campaignsRouter)
