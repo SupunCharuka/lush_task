@@ -1,6 +1,6 @@
 import express from 'express'
 import Invoice from '../models/Invoice.js'
-// Puppeteer is loaded lazily below to avoid import-time failures in serverless environments
+import puppeteer from 'puppeteer'
 import { sendMail } from '../utils/mail.js'
 import { renderInvoiceHTML } from '../utils/invoiceRenderer.js'
 import { requirePermission } from '../middleware/authorization.js'
@@ -122,10 +122,6 @@ router.post('/invoices/:id/send', requirePermission('invoices:read'), async (req
         if (!to) return res.status(400).json({ error: 'No recipient email found. Add `customerEmail` to invoice or provide `to` in request body.' })
 
         // Render HTML and generate PDF buffer
-        if (process.env.DISABLE_PDF === '1') {
-            return res.status(501).json({ error: 'PDF generation is disabled in this environment' })
-        }
-
         const html = renderInvoiceHTML(invoice)
         const browser = await getBrowser()
         const page = await (await browser).newPage()
@@ -172,12 +168,7 @@ router.get('/invoices/check-overdue', requirePermission('invoices:read'), async 
 // Reuse browser across requests (improves performance)
 let browserPromise = null;
 async function getBrowser() {
-    if (process.env.DISABLE_PDF === '1') throw new Error('PDF generation disabled');
-    if (!browserPromise) {
-        // dynamically import puppeteer to avoid module import issues in serverless
-        const puppeteer = (await import('puppeteer')).default;
-        browserPromise = puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-    }
+    if (!browserPromise) browserPromise = puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     return browserPromise;
 }
 
@@ -187,8 +178,6 @@ router.get('/invoices/:id/pdf', async (req, res) => {
     try {
         const invoice = await Invoice.findById(req.params.id);
         if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
-
-        if (process.env.DISABLE_PDF === '1') return res.status(501).json({ error: 'PDF generation is disabled in this environment' });
 
         const html = renderInvoiceHTML(invoice);
         const browser = await getBrowser();
