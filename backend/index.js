@@ -22,13 +22,26 @@ app.use(express.json());
 // Lightweight dev auth: sets req.user when Authorization header contains a user id
 app.use(devAuth)
 
-app.use(
-    cors({
-        origin: ['https://frontend-phi-six-53.vercel.app'],
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
-    })
-)
+// CORS configuration that explicitly handles preflight requests.
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow the deployed frontend origin and allow undefined (eg. server-side requests, Postman)
+        const allowedOrigins = ['https://frontend-phi-six-53.vercel.app'];
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// Ensure preflight requests are handled for all routes
+app.options('*', cors(corsOptions));
 
 // API routes
 app.use('/api', campaignsRouter)
