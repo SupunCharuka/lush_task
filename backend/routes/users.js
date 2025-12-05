@@ -2,12 +2,11 @@ import express from 'express'
 import bcrypt from 'bcrypt'
 import User from '../models/User.js'
 import Role from '../models/Role.js'
-import { requirePermission } from '../middleware/authorization.js'
 
 const router = express.Router()
 
 // GET /api/users
-router.get('/users', requirePermission('users:read'), async (req, res) => {
+router.get('/users', async (req, res) => {
   try {
     const users = await User.find().select('-passwordHash').sort({ createdAt: -1 })
     res.json(users)
@@ -18,7 +17,7 @@ router.get('/users', requirePermission('users:read'), async (req, res) => {
 
 // POST /api/users
 // Accepts optional `roles` array (role names or ids). Falls back to legacy `role` string.
-router.post('/users', requirePermission('users:create'), async (req, res) => {
+router.post('/users', async (req, res) => {
   try {
     const { name, email, role = 'user', roles = [], password } = req.body
 

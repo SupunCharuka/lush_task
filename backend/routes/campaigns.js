@@ -1,11 +1,10 @@
 import express from 'express'
 import Campaign from '../models/Campaign.js'
-import { requirePermission } from '../middleware/authorization.js'
 
 const router = express.Router()
 
 // GET /api/campaigns
-router.get('/campaigns', requirePermission('campaigns:manage'), async (req, res) => {
+router.get('/campaigns', async (req, res) => {
   try {
     const items = await Campaign.find().sort({start: -1})
     res.json(items)
@@ -15,7 +14,7 @@ router.get('/campaigns', requirePermission('campaigns:manage'), async (req, res)
 })
 
 // POST /api/campaigns
-router.post('/campaigns', requirePermission('campaigns:manage'), async (req, res) => {
+router.post('/campaigns', async (req, res) => {
   try {
     const campaign = new Campaign(req.body)
     const saved = await campaign.save()
@@ -26,7 +25,7 @@ router.post('/campaigns', requirePermission('campaigns:manage'), async (req, res
 })
 
 // PUT /api/campaigns/:id
-router.put('/campaigns/:id', requirePermission('campaigns:manage'), async (req, res) => {
+router.put('/campaigns/:id', async (req, res) => {
   try {
     const updated = await Campaign.findByIdAndUpdate(req.params.id, req.body, { new: true })
     res.json(updated)
@@ -36,7 +35,7 @@ router.put('/campaigns/:id', requirePermission('campaigns:manage'), async (req, 
 })
 
 // DELETE /api/campaigns/:id
-router.delete('/campaigns/:id', requirePermission('campaigns:manage'), async (req, res) => {
+router.delete('/campaigns/:id', async (req, res) => {
   try {
     await Campaign.findByIdAndDelete(req.params.id)
     res.json({ success: true })
@@ -46,7 +45,7 @@ router.delete('/campaigns/:id', requirePermission('campaigns:manage'), async (re
 })
 
 // GET /api/leads-by-platform
-router.get('/leads-by-platform', requirePermission('campaigns:manage'), async (req, res) => {
+router.get('/leads-by-platform', async (req, res) => {
   try {
     const agg = await Campaign.aggregate([
       { $group: { _id: '$platform', leads: { $sum: '$leads' } } },
@@ -59,7 +58,7 @@ router.get('/leads-by-platform', requirePermission('campaigns:manage'), async (r
 })
 
 // GET /api/monthly-campaigns
-router.get('/monthly-campaigns', requirePermission('campaigns:manage'), async (req, res) => {
+router.get('/monthly-campaigns', async (req, res) => {
   try {
     const agg = await Campaign.aggregate([
       { $match: { start: { $exists: true } } },

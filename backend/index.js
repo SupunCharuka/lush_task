@@ -21,7 +21,7 @@ app.use(express.json());
 
 // Enable CORS early so preflight OPTIONS requests receive proper headers
 app.use(cors({
-    origin: '*',
+    origin: 'h',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }))

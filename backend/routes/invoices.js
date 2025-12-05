@@ -3,7 +3,6 @@ import Invoice from '../models/Invoice.js'
 import puppeteer from 'puppeteer'
 import { sendMail } from '../utils/mail.js'
 import { renderInvoiceHTML } from '../utils/invoiceRenderer.js'
-import { requirePermission } from '../middleware/authorization.js'
 
 const router = express.Router()
 
@@ -25,7 +24,7 @@ function calculateTotals(data) {
 }
 
 // GET /api/invoices
-router.get('/invoices', requirePermission('invoices:read'), async (req, res) => {
+router.get('/invoices', async (req, res) => {
     try {
         const items = await Invoice.find().sort({ createdAt: -1 })
         res.json(items)
@@ -35,7 +34,7 @@ router.get('/invoices', requirePermission('invoices:read'), async (req, res) => 
 })
 
 // GET /api/invoices/:id
-router.get('/invoices/:id', requirePermission('invoices:read'), async (req, res) => {
+router.get('/invoices/:id', async (req, res) => {
     try {
         const item = await Invoice.findById(req.params.id)
         if (!item) return res.status(404).json({ error: 'Invoice not found' })
@@ -46,7 +45,7 @@ router.get('/invoices/:id', requirePermission('invoices:read'), async (req, res)
 })
 
 // POST /api/invoices
-router.post('/invoices', requirePermission('invoices:create'), async (req, res) => {
+router.post('/invoices', async (req, res) => {
     try {
         // Auto-generate invoiceNumber if not provided
         const body = { ...req.body }
@@ -81,7 +80,7 @@ router.post('/invoices', requirePermission('invoices:create'), async (req, res) 
 })
 
 // PUT /api/invoices/:id
-router.put('/invoices/:id', requirePermission('invoices:update'), async (req, res) => {
+router.put('/invoices/:id', async (req, res) => {
     try {
         // Merge existing invoice with incoming fields, then recalculate totals
         const existing = await Invoice.findById(req.params.id)
@@ -103,7 +102,7 @@ router.put('/invoices/:id', requirePermission('invoices:update'), async (req, re
 })
 
 // DELETE /api/invoices/:id
-router.delete('/invoices/:id', requirePermission('invoices:delete'), async (req, res) => {
+router.delete('/invoices/:id', async (req, res) => {
     try {
         await Invoice.findByIdAndDelete(req.params.id)
         res.json({ success: true })
@@ -113,7 +112,7 @@ router.delete('/invoices/:id', requirePermission('invoices:delete'), async (req,
 })
 
 // POST /api/invoices/:id/send -> generate PDF and send invoice by email
-router.post('/invoices/:id/send', requirePermission('invoices:read'), async (req, res) => {
+router.post('/invoices/:id/send', async (req, res) => {
     try {
         const invoice = await Invoice.findById(req.params.id)
         if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
@@ -156,7 +155,7 @@ router.post('/invoices/:id/send', requirePermission('invoices:read'), async (req
 })
 
 // GET /api/invoices/check-overdue -> run overdue check now (manual)
-router.get('/invoices/check-overdue', requirePermission('invoices:read'), async (req, res) => {
+router.get('/invoices/check-overdue', async (req, res) => {
     try {
         const result = await markOverdue()
         res.json({ success: true, result })

@@ -1,13 +1,13 @@
 import express from 'express'
 import Role from '../models/Role.js'
 import Permission from '../models/Permission.js'
-import { requireRole, requirePermission } from '../middleware/authorization.js'
+import { requireRole } from '../middleware/authorization.js'
 
 const router = express.Router()
 
 // GET /api/roles
 // Allow users with the 'roles:read' permission to fetch available roles
-router.get('/roles', requirePermission('roles:read'), async (req, res) => {
+router.get('/roles', async (req, res) => {
   try {
     const roles = await Role.find().populate('permissions')
     res.json(roles)
@@ -49,7 +49,7 @@ router.post('/roles', requireRole('admin'), async (req, res) => {
 })
 
 // GET /api/permissions
-router.get('/permissions', requirePermission('permissions:read'), async (req, res) => {
+router.get('/permissions', async (req, res) => {
   try {
     const perms = await Permission.find().sort({ name: 1 })
     res.json(perms)

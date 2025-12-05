@@ -1,11 +1,10 @@
 import express from 'express'
 import Expense from '../models/Expense.js'
-import { requirePermission } from '../middleware/authorization.js'
 
 const router = express.Router()
 
 // GET /api/expenses
-router.get('/expenses', requirePermission('expenses:manage'), async (req, res) => {
+router.get('/expenses', async (req, res) => {
   try {
     const items = await Expense.find().sort({ date: -1 })
     res.json(items)
@@ -15,7 +14,7 @@ router.get('/expenses', requirePermission('expenses:manage'), async (req, res) =
 })
 
 // POST /api/expenses
-router.post('/expenses', requirePermission('expenses:manage'), async (req, res) => {
+router.post('/expenses', async (req, res) => {
   try {
     const expense = new Expense(req.body)
     const saved = await expense.save()
@@ -26,7 +25,7 @@ router.post('/expenses', requirePermission('expenses:manage'), async (req, res) 
 })
 
 // PUT /api/expenses/:id
-router.put('/expenses/:id', requirePermission('expenses:manage'), async (req, res) => {
+router.put('/expenses/:id', async (req, res) => {
   try {
     const updated = await Expense.findByIdAndUpdate(req.params.id, req.body, { new: true })
     res.json(updated)
@@ -36,7 +35,7 @@ router.put('/expenses/:id', requirePermission('expenses:manage'), async (req, re
 })
 
 // DELETE /api/expenses/:id
-router.delete('/expenses/:id', requirePermission('expenses:manage'), async (req, res) => {
+router.delete('/expenses/:id', async (req, res) => {
   try {
     await Expense.findByIdAndDelete(req.params.id)
     res.json({ success: true })
@@ -46,7 +45,7 @@ router.delete('/expenses/:id', requirePermission('expenses:manage'), async (req,
 })
 
 // GET /api/expenses/monthly-summary
-router.get('/expenses/monthly-summary', requirePermission('expenses:manage'), async (req, res) => {
+router.get('/expenses/monthly-summary', async (req, res) => {
   try {
     const agg = await Expense.aggregate([
       { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$date' } }, total: { $sum: '$amount' }, count: { $sum: 1 } } },
