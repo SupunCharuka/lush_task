@@ -1,7 +1,7 @@
 import express from 'express'
 import Income from '../models/Income.js'
 import Expense from '../models/Expense.js'
-import puppeteer from 'puppeteer'
+// Puppeteer is imported lazily in the PDF export flow to avoid serverless import-time issues
 import ExcelJS from 'exceljs'
 import { requirePermission } from '../middleware/authorization.js'
 
@@ -97,6 +97,11 @@ router.get('/reports/export', requirePermission('reports:read'), async (req, res
       </html>
     `
 
+    if (process.env.DISABLE_PDF === '1') {
+      return res.status(501).json({ error: 'PDF/export generation is disabled in this environment' })
+    }
+
+    const puppeteer = (await import('puppeteer')).default
     const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
     const page = await browser.newPage()
     await page.setContent(html, { waitUntil: 'networkidle0' })
