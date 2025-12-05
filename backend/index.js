@@ -1,10 +1,48 @@
 import 'dotenv/config';
-import mongoose from 'mongoose';
+import express from 'express';
 import { PORT, mongoDBURL } from './config.js';
-import app from './app.js';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import campaignsRouter from './routes/campaigns.js'
+import incomesRouter from './routes/incomes.js'
+import expensesRouter from './routes/expenses.js'
+import invoicesRouter from './routes/invoices.js'
 import { markOverdue } from './routes/invoices.js'
+import metricsRouter from './routes/metrics.js'
+import reportsRouter from './routes/reports.js'
+import usersRouter from './routes/users.js'
+import rolesRouter from './routes/roles.js'
+import devAuth from './middleware/auth.js'
+import authRouter from './routes/auth.js'
 
-// Connect to MongoDB and start the Express server (local/dev use)
+const app = express();
+
+app.use(express.json());
+
+// Lightweight dev auth: sets req.user when Authorization header contains a user id
+app.use(devAuth)
+
+app.use(
+    cors({
+        origin: ['https://frontend-phi-six-53.vercel.app'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+    })
+)
+
+// API routes
+app.use('/api', campaignsRouter)
+app.use('/api', incomesRouter)
+app.use('/api', expensesRouter)
+app.use('/api', invoicesRouter)
+app.use('/api', authRouter)
+app.use('/api', usersRouter)
+app.use('/api', rolesRouter)
+app.use('/api/metrics', metricsRouter)
+app.use('/api', reportsRouter)
+
+
+
 mongoose
     .connect(mongoDBURL)
     .then(() => {
