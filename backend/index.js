@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
-import { PORT, mongoDBURL } from './config.js';
+import { PORT, mongoDBURL, FRONTEND_URL } from './config.js';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import campaignsRouter from './routes/campaigns.js'
@@ -22,9 +22,10 @@ app.use(express.json());
 // Lightweight dev auth: sets req.user when Authorization header contains a user id
 app.use(devAuth)
 
+// CORS configuration
 app.use(
     cors({
-        origin: 'http://localhost:5173',
+        origin: FRONTEND_URL,
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
     })

@@ -5,6 +5,7 @@ import LineChart from '../components/charts/LineChart'
 import BarChart from '../components/charts/BarChart'
 import StyledInput from '../components/inputs/StyledInput'
 import StyledSelect from '../components/inputs/StyledSelect'
+import API_BASE from '../api/config'
 
 export default function Reports() {
   const [type, setType] = useState('income')
@@ -16,7 +17,7 @@ export default function Reports() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:5000'
+  const apiBase = API_BASE
 
   useEffect(() => {
     // fetch both lists once
@@ -24,16 +25,16 @@ export default function Reports() {
       setLoading(true)
       try {
         const [incResp, expResp] = await Promise.all([
-          axios.get(`${apiBase}/api/incomes`).then(r => r.data),
-          axios.get(`${apiBase}/api/expenses`).then(r => r.data)
+          axios.get(`${apiBase}/incomes`).then(r => r.data),
+          axios.get(`${apiBase}/expenses`).then(r => r.data)
         ])
         setIncomes(Array.isArray(incResp) ? incResp : [])
         setExpenses(Array.isArray(expResp) ? expResp : [])
         // fetch monthly summaries for charts
         try {
           const [incSum, expSum] = await Promise.all([
-            axios.get(`${apiBase}/api/incomes/monthly-summary`).then(r => r.data),
-            axios.get(`${apiBase}/api/expenses/monthly-summary`).then(r => r.data)
+            axios.get(`${apiBase}/incomes/monthly-summary`).then(r => r.data),
+            axios.get(`${apiBase}/expenses/monthly-summary`).then(r => r.data)
           ])
           setIncomeSummary(incSum)
           setExpenseSummary(expSum)
@@ -84,7 +85,7 @@ export default function Reports() {
       const params = new URLSearchParams({ type, format })
       if (from) params.set('from', from)
       if (to) params.set('to', to)
-      const resp = await axios.get(`${apiBase}/api/reports/export?${params.toString()}`, { responseType: 'blob' })
+      const resp = await axios.get(`${apiBase}/reports/export?${params.toString()}`, { responseType: 'blob' })
       const blob = resp.data
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
