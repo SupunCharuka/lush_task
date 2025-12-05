@@ -12,7 +12,7 @@ import Reports from './pages/Reports'
 import CreateUser from './pages/CreateUser'
 import Roles from './pages/Roles'
 import Login from './pages/Login'
-import ProtectedRoute from './components/ProtectedRoute'
+// ProtectedRoute removed — routes are public or handle auth internally
 
 const drawerWidth = 240
 
@@ -32,16 +32,14 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
 
-              <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/marketing" element={<Marketing />} />
-                <Route path="/income" element={<Income />} />
-                <Route path="/expenses" element={<Expenses />} />
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/users/create" element={<CreateUser />} />
-                <Route path="/roles" element={<Roles />} />
-                <Route path="/reports" element={<Reports />} />
-              </Route>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/marketing" element={<Marketing />} />
+              <Route path="/income" element={<Income />} />
+              <Route path="/expenses" element={<Expenses />} />
+              <Route path="/invoices" element={<Invoices />} />
+              <Route path="/users/create" element={<CreateUser />} />
+              <Route path="/roles" element={<Roles />} />
+              <Route path="/reports" element={<Reports />} />
             </Routes>
           </main>
         </div>
