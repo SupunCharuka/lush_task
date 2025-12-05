@@ -18,7 +18,7 @@ app.use(express.json());
 // Lightweight dev auth: sets req.user when Authorization header contains a user id
 app.use(devAuth)
 
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+const frontendUrl = 'https://frontend-phi-six-53.vercel.app'
 
 app.use(
     cors({
