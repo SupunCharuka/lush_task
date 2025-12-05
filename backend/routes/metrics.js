@@ -1,12 +1,12 @@
 import express from 'express'
 import Income from '../models/Income.js'
 import Expense from '../models/Expense.js'
-
+import { requirePermission } from '../middleware/authorization.js'
 
 const router = express.Router()
 
 // GET /api/metrics/yearly?year=2025
-router.get('/yearly', async (req, res) => {
+router.get('/yearly', requirePermission('reports:read'), async (req, res) => {
   try {
     const year = parseInt(req.query.year || new Date().getFullYear(), 10)
     const start = new Date(year, 0, 1)
@@ -60,7 +60,7 @@ router.get('/yearly', async (req, res) => {
 })
 
 // GET /api/metrics/monthly?year=2025&month=11
-router.get('/monthly', async (req, res) => {
+router.get('/monthly', requirePermission('reports:read'), async (req, res) => {
   try {
     const year = parseInt(req.query.year || new Date().getFullYear(), 10)
     const month = parseInt(req.query.month || (new Date().getMonth() + 1), 10) // 1-12
